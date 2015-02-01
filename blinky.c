@@ -1,4 +1,5 @@
 #include <ioc8051F330.h>
+#include "reload_timer.h"
 // System clock
 #define SYSCLK                  24500000/8
 #define TIMER_PRESCALER         48
@@ -20,11 +21,6 @@
 // Ports
 #define pLED                    P1_bit.P13
 #define pButton                 P0_bit.P07
-// Function prototypes
-void initializePorts(void);
-void initializeTimers(void);
-void reloadTimer(unsigned char timerNumber);
-void initTimer(unsigned char timerNumber);
 // Global variables
 volatile unsigned char divider = LED_DIVIDER;
 volatile unsigned char toggle = 1;
@@ -39,12 +35,12 @@ void main(void) {
     while (1);
 }
 // Initialize ports
-void initializePorts(void) {
+static void initializePorts(void) {
     XBR1 = 0x40;
     P1MDOUT = 0x08;
 }
 // Initialize Timer0, Timer1
-void initializeTimers(void) {
+static void initializeTimers(void) {
     for (unsigned char i = 0; i < 2; i++) {
         reloadTimer(i);
         initTimer(i);
@@ -87,7 +83,7 @@ void reloadTimer(unsigned char timerNumber) {
     }
 }
 // Enable timer and allow interrupts, set 16-bit mode
-void initTimer(unsigned char timerNumber) {
+static void initTimer(unsigned char timerNumber) {
     switch (timerNumber) {
         case 0:
             TMOD_bit.T0M1 = 0;
