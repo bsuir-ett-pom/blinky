@@ -25,19 +25,27 @@
 volatile unsigned char divider = LED_DIVIDER;
 volatile unsigned char toggle = 1;
 // Code
-void main(void) {
-    // Disable watchdog timer
-    PCA0MD &= !0x40;
-    initializeTimers();
-    initializePorts();
-    // Enable global interrupts
-    IE_bit.EA = 1;
-    while (1);
-}
 // Initialize ports
 static void initializePorts(void) {
     XBR1 = 0x40;
     P1MDOUT = 0x08;
+}
+// Enable timer and allow interrupts, set 16-bit mode
+static void initTimer(unsigned char timerNumber) {
+    switch (timerNumber) {
+        case 0:
+            TMOD_bit.T0M1 = 0;
+            TMOD_bit.T0M0 = 1;
+            IE_bit.ET0 = 1;
+            TCON_bit.TR0 = 1;
+            break;
+        case 1:
+            TMOD_bit.T1M1 = 0;
+            TMOD_bit.T1M0 = 1;
+            IE_bit.ET1 = 1;
+            TCON_bit.TR1 = 1;
+            break;
+    }
 }
 // Initialize Timer0, Timer1
 static void initializeTimers(void) {
@@ -46,6 +54,15 @@ static void initializeTimers(void) {
         initTimer(i);
     }
     CKCON = 0x02;
+}
+void main(void) {
+    // Disable watchdog timer
+    PCA0MD &= !0x40;
+    initializeTimers();
+    initializePorts();
+    // Enable global interrupts
+    IE_bit.EA = 1;
+    while (1);
 }
 // Timer 0 interrupt routine
 #pragma vector = TF0_int
@@ -79,23 +96,6 @@ void reloadTimer(unsigned char timerNumber) {
         case 1:
             TH1 = TIMER1_RELOAD_HIGH;
             TL1 = TIMER1_RELOAD_LOW;
-            break;
-    }
-}
-// Enable timer and allow interrupts, set 16-bit mode
-static void initTimer(unsigned char timerNumber) {
-    switch (timerNumber) {
-        case 0:
-            TMOD_bit.T0M1 = 0;
-            TMOD_bit.T0M0 = 1;
-            IE_bit.ET0 = 1;
-            TCON_bit.TR0 = 1;
-            break;
-        case 1:
-            TMOD_bit.T1M1 = 0;
-            TMOD_bit.T1M0 = 1;
-            IE_bit.ET1 = 1;
-            TCON_bit.TR1 = 1;
             break;
     }
 }
